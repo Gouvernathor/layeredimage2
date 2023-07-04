@@ -544,7 +544,10 @@ class AttributeGroupNode(LayerNode):
 
     @staticmethod
     def parse(l, li_name):
-        group_name = l.require(l.image_name_component)
+        if l.keyword("multiple"):
+            group_name = None
+        else:
+            group_name = l.require(l.image_name_component)
 
         self = AttributeGroupNode(li_name, group_name)
 
@@ -572,15 +575,13 @@ class AttributeGroupNode(LayerNode):
             l.expect_eol()
             l.expect_noblock("group")
 
-        if ("auto" in self.final_properties) and (group_name == "multiple") and ("variant" not in self.final_properties):
+        if ("auto" in self.final_properties) and (group_name is None) and ("variant" not in self.final_properties):
             l.error("A group without a variant cannot be multiple and auto at the same time")
 
         return self
 
     def execute(self):
         group_name = self.group_name
-        if group_name == "multiple":
-            group_name = None
 
         properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
 
