@@ -42,6 +42,15 @@ VERBATIM_PROPERTIES = frozenset(("if_attr", "variant", "prefix", "default", "aut
 predict_all = None
 
 
+def resolve_image(img):
+    if img is None:
+        return None
+    # if isinstance(img, renpy.atl.RawBlock):
+    #     return renpy.display.transform.ATLTransform(img)
+    else:
+        return eval(img)
+
+
 class IfAttr(python_object):
     """
     Represents an if_attr expression.
@@ -476,6 +485,16 @@ class AttributeNode(LayerNode):
             ll.expect_noblock("attribute")
 
         return self
+
+    def execute(self, group_name=None, **group_properties):
+        group_args = {k: group_properties.pop(k) for k in ATL_PROPERTIES.intersection(group_properties)}
+
+        properties = (group_properties # the remaining ones
+            | {k: eval(v) for k, v in self.expr_properties.items()}
+            | self.final_properties)
+
+        return [Attribute(group_name, self.name, resolve_image(self.displayable), group_args=group_args, **properties)]
+
 
 class AttributeGroupNode(LayerNode):
     pass
