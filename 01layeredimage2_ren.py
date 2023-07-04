@@ -412,8 +412,7 @@ class LayerNode(python_object):
     @staticmethod
     def parse(l):
         """
-        Takes a lexer, and returns a list of instances of itself.
-        Except for Condition (maybe), which returns one instance of itself.
+        Takes a lexer, and returns an instance of itself.
         """
         raise NotImplementedError
 
@@ -499,11 +498,11 @@ class LayeredImageNode(python_object):
 
         while not ll.eob:
             if ll.keyword("attribute"):
-                self.children.extend(AttributeNode.parse(ll))
+                self.children.append(AttributeNode.parse(ll))
                 ll.advance()
 
             elif ll.keyword("group"):
-                self.children.extend(AttributeGroupNode.parse(ll))
+                self.children.append(AttributeGroupNode.parse(ll))
                 ll.advance()
 
             elif ll.keyword("if"):
