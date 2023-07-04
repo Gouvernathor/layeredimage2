@@ -581,6 +581,10 @@ class ConditionNode(LayerNode):
 
         return self
 
+    def execute(self):
+        properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
+        return [Condition(self.condition, resolve_image(self.displayable), **properties)]
+
 class ConditionGroupNode(LayerNode):
     def __init__(self, conditions=()):
         self.conditions = conditions
@@ -601,6 +605,13 @@ class ConditionGroupNode(LayerNode):
             l.advance()
 
         return ConditionGroupNode(conditions)
+
+    def execute(self):
+        l = []
+        for c in self.conditions:
+            l.extend(c.execute())
+
+        return [ConditionGroup(l)]
 
 class AlwaysNode(LayerNode):
     def __init__(self):
