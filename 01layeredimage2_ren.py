@@ -577,6 +577,37 @@ class AttributeGroupNode(LayerNode):
 
         return self
 
+    def execute(self):
+        group_name = self.group_name
+        if group_name == "multiple":
+            group_name = None
+
+        properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
+
+        auto = properties.pop("auto", False)
+        variant = properties.get("variant", None)
+
+        rv = []
+
+        for an in self.children:
+            rv.extend(an.execute(group_name=group_name, **properties))
+
+        if auto:
+            seen = set(a.raw_attribute_name for a in rv)
+            pattern = self.li_name.replace(" ", "_") + "_"
+            if group_name is not None:
+                pattern += group_name + "_"
+            if variant:
+                pattern += variant + "_"
+
+            for i in renpy.list_images():
+                if i.startswith(pattern):
+                    attr, *s = i.removeprefix(pattern).split()
+                    if (not s) and (attr not in seen):
+                        rv.append(Attribute(group_name, attr, renpy.displayable(i), **properties))
+
+        return rv
+
 class ConditionNode(LayerNode):
     def __init__(self, condition):
         self.condition = condition
