@@ -21,7 +21,7 @@ EMPTYMAP = MappingProxyType({})
 ATL_PROPERTIES = frozenset(i for i in renpy.atl.PROPERTIES)
 
 # The properties for the Fixed wrapping the layeredimage
-FIXED_PROPERTIES = frozenset(i for i in renpy.sl2.slproperties.position_property_names).union(renpy.sl2.properties.box_property_names)
+FIXED_PROPERTIES = frozenset(i for i in renpy.sl2.slproperties.position_property_names).union(renpy.sl2.slproperties.box_property_names)
 
 # The properties taken at the base level of the layeredimage
 BASE_PROPERTIES = ATL_PROPERTIES | FIXED_PROPERTIES | {"image_format", "format_function", "attribute_function", "offer_screen", "at"}
@@ -510,7 +510,7 @@ class LayeredImageNode(python_object):
                 ll.advance()
 
             else:
-                while parse_properties(l, self.properties, BASE_PROPERTIES):
+                while parse_properties(ll, self.properties, BASE_PROPERTIES):
                     pass
 
                 ll.expect_noblock("layeredimage element")
@@ -519,8 +519,8 @@ class LayeredImageNode(python_object):
 
         return self
 
-
     def execute(self):
         raise NotImplementedError
+
 
 renpy.register_statement("layeredimage2", parse=LayeredImageNode.parse, execute=LayeredImageNode.execute, init=True, block=True)
