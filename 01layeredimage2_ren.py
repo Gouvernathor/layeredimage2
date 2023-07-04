@@ -418,6 +418,36 @@ class LayeredImage(object):
         return tuple(rv)
 
 
+# almost same as original, but takes and mutates a dict
+def parse_property(l, final_properties, expr_properties, names):
+    """
+    Parses a property among the provided names and stores the
+    evalable value inside the properties dict.
+    Returns True if it found a property, False if it didn't.
+    """
+
+    check = l.checkpoint()
+
+    name = l.word()
+
+    if name not in names:
+        l.revert(check)
+        return False
+
+    if (name in final_properties) or (name in expr_properties):
+        l.error("Duplicate property: {}".format(name))
+
+    if name in ("auto", "default"):
+        final_properties[name] = True
+    elif name in ("variant", "prefix"):
+        final_properties[name] = l.require(l.image_name_component)
+    elif name == "at":
+        expr_properties[name] = l.require(l.comma_expression)
+    else:
+        expr_properties[name] = l.require(l.simple_expression)
+
+    return True
+
 class LayerNode(python_object):
     """
     An abstract base class which will probably be removed eventually,
@@ -503,7 +533,6 @@ class AttributeNode(LayerNode):
 
         return [Attribute(group_name, self.name, resolve_image(self.displayable), group_args=group_args, **properties)]
 
-
 class AttributeGroupNode(LayerNode):
     pass
 
@@ -515,36 +544,6 @@ class ConditionGroupNode(LayerNode):
 
 class AlwaysNode(LayerNode):
     pass
-
-# almost same as original, but takes and mutates a dict
-def parse_property(l, final_properties, expr_properties, names):
-    """
-    Parses a property among the provided names and stores the
-    evalable value inside the properties dict.
-    Returns True if it found a property, False if it didn't.
-    """
-
-    check = l.checkpoint()
-
-    name = l.word()
-
-    if name not in names:
-        l.revert(check)
-        return False
-
-    if (name in final_properties) or (name in expr_properties):
-        l.error("Duplicate property: {}".format(name))
-
-    if name in ("auto", "default"):
-        final_properties[name] = True
-    elif name in ("variant", "prefix"):
-        final_properties[name] = l.require(l.image_name_component)
-    elif name == "at":
-        expr_properties[name] = l.require(l.comma_expression)
-    else:
-        expr_properties[name] = l.require(l.simple_expression)
-
-    return True
 
 class LayeredImageNode(python_object):
     def __init__(self, name):
