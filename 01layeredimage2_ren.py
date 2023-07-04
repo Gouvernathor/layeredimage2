@@ -527,9 +527,10 @@ class AttributeNode(LayerNode):
     def execute(self, group_name=None, **group_properties):
         group_args = {k: group_properties.pop(k) for k in ATL_PROPERTIES.intersection(group_properties)}
 
-        properties = (group_properties # the remaining ones
+        properties = (group_properties # the remaining ones, overwritten by the following
+            | self.final_properties
             | {k: eval(v) for k, v in self.expr_properties.items()}
-            | self.final_properties)
+        )
 
         return [Attribute(group_name, self.name, resolve_image(self.displayable), group_args=group_args, **properties)]
 
