@@ -136,11 +136,13 @@ class Attribute(Layer):
 
     def apply_format(self, li):
         self.displayable = self.wrap(li.format_function(
-            "Attribute ({!r}, {!r})".format(self.group_name, self.attribute_name),
+            what="Attribute ({!r}, {!r})".format(self.group_name, self.attribute_name),
+            name=li.name,
             group=self.group_name,
             variant=self.variant,
             attribute=self.raw_attribute_name,
             image=self.displayable,
+            image_format=li.image_format,
         ))
 
     def get_displayable(self, attributes):
@@ -162,10 +164,13 @@ class Condition(Layer):
 
     def apply_format(self, li):
         self.displayable = self.wrap(li.format_function(
-            "Condition ({})".format(self.condition),
+            what="Condition ({})".format(self.condition),
+            name=li.name,
             group=None,
+            variant=None,
             attribute=None,
             image=self.displayable,
+            image_format=li.image_format,
         ))
 
     def get_displayable(self, attributes):
@@ -214,10 +219,13 @@ class Always(Layer):
 
     def apply_format(self, li):
         self.displayable = self.wrap(li.format_function(
-            "Always",
+            what="Always",
+            name=li.name,
             group=None,
+            variant=None,
             attribute=None,
             image=self.displayable,
+            image_format=li.image_format,
         ))
 
     def get_displayable(self, attributes):
