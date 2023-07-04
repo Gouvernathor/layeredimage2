@@ -36,6 +36,9 @@ ALWAYS_PROPERTIES = LAYER_PROPERTIES
 # The properties for the condition layers
 CONDITION_PROPERTIES = LAYER_PROPERTIES
 
+# The properties whose result should not be evaluated, from the Node to the Layer
+VERBATIM_PROPERTIES = frozenset(("if_attr", "variant", "prefix", "default", "auto", "multiple"))
+
 predict_all = None
 
 
@@ -419,6 +422,7 @@ class LayerNode(python_object):
         Returns a list of Layer instances.
         Usually of the referred type (AttributeNode -> Attribute), but not always.
         But they're always in a list.
+        May take additional parameters, depending on the type of node.
         """
         raise NotImplementedError
 
@@ -438,7 +442,7 @@ class AlwaysNode(LayerNode):
     pass
 
 # almost same as original, but takes and mutates a dict
-def parse_properties(l, properties, names):
+def parse_property(l, final_properties, expr_properties, names):
     """
     Parses a property among the provided names and stores the
     evalable value inside the properties dict.
@@ -453,17 +457,17 @@ def parse_properties(l, properties, names):
         l.revert(check)
         return False
 
-    if name in properties:
+    if (name in final_properties) or (name in expr_properties):
         l.error("Duplicate property: {}".format(name))
 
     if name in ("auto", "default"):
-        expr = "True"
+        final_properties[name] = True
+    elif name in ("variant", "prefix"):
+        final_properties[name] = l.require(l.image_name_component)
     elif name == "at":
-        expr = l.require(l.comma_expression)
+        expr_properties[name] = l.require(l.comma_expression)
     else:
-        expr = l.require(l.simple_expression)
-
-    properties[name] = expr
+        expr_properties[name] = l.require(l.simple_expression)
 
     return True
 
@@ -471,7 +475,8 @@ class LayeredImageNode(python_object):
     def __init__(self, name):
         self.name = name
         self.children = []
-        self.properties = {}
+        self.final_properties = {}
+        self.expr_properties = {}
 
     @staticmethod
     def parse(l):
@@ -510,7 +515,7 @@ class LayeredImageNode(python_object):
                 ll.advance()
 
             else:
-                while parse_properties(ll, self.properties, BASE_PROPERTIES):
+                while parse_property(ll, self.final_properties, self.expr_properties, BASE_PROPERTIES):
                     pass
 
                 ll.expect_noblock("layeredimage element")
