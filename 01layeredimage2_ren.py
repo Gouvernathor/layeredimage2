@@ -602,7 +602,8 @@ class ConditionGroupNode(LayerNode):
 
         if l.keyword("else"):
             conditions.append(ConditionNode.parse(l, False))
-            l.advance()
+        else:
+            l.unadvance()
 
         return ConditionGroupNode(conditions)
 
@@ -700,7 +701,6 @@ class LayeredImageNode(python_object):
 
             elif ll.keyword("if"):
                 self.children.append(ConditionGroupNode.parse(ll))
-                # advances by itself, fix that
 
             elif ll.keyword("always"):
                 self.children.append(AlwaysNode.parse(ll))
