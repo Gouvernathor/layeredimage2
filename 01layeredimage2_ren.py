@@ -236,7 +236,6 @@ class Always(Layer):
         return self.displayable
 
 class LayeredImage(object):
-# class LayeredImage(store.layeredimage.LayeredImage):
     def __init__(self, layers, at=(), name=None, image_format=None, format_function=format_function, attribute_function=None, offer_screen=None, **kwargs):
         self.name = name
         self.image_format = image_format
@@ -498,7 +497,6 @@ class AttributeNode(LayerNode):
                     displayable = lex.simple_expression()
 
                 if displayable is not None:
-
                     if self.displayable is not None:
                         lex.error("An attribute can only have zero or one displayable, two found : {} and {}".format(displayable, self.displayable))
 
@@ -576,19 +574,16 @@ class LayeredImageNode(python_object):
         while not ll.eob:
             if ll.keyword("attribute"):
                 self.children.append(AttributeNode.parse(ll))
-                ll.advance()
 
             elif ll.keyword("group"):
                 self.children.append(AttributeGroupNode.parse(ll))
-                ll.advance()
 
             elif ll.keyword("if"):
                 self.children.append(ConditionGroupNode.parse(ll))
-                # advances by itself # fix that ?
+                # advances by itself, fix that
 
             elif ll.keyword("always"):
                 self.children.append(AlwaysNode.parse(ll))
-                ll.advance()
 
             else:
                 while parse_property(ll, self.final_properties, self.expr_properties, BASE_PROPERTIES):
@@ -596,7 +591,8 @@ class LayeredImageNode(python_object):
 
                 ll.expect_noblock("layeredimage element")
                 ll.expect_eol()
-                ll.advance()
+
+            ll.advance()
 
         return self
 
