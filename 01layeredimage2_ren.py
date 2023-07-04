@@ -28,7 +28,7 @@ BASE_PROPERTIES = ATL_PROPERTIES | FIXED_PROPERTIES | {"image_format", "format_f
 # The properties for all layers
 LAYER_PROPERTIES = ATL_PROPERTIES | {"if_attr", "at"}
 # The properties for attribute layers
-ATTRIBUTE_PROPERTIES = LAYER_PROPERTIES # | {"variant", "default"}
+ATTRIBUTE_PROPERTIES = LAYER_PROPERTIES | {"variant", "default"}
 # The properties for the group statement
 GROUP_PROPERTIES = LAYER_PROPERTIES # | {"auto", "variant", "prefix"}
 # The properties for the always layers
@@ -426,7 +426,56 @@ class LayerNode(python_object):
         raise NotImplementedError
 
 class AttributeNode(LayerNode):
-    pass
+    def __init__(self, name):
+        self.name = name
+        self.displayable = None
+        self.final_properties = {}
+        self.expr_properties = {}
+
+    @staticmethod
+    def parse(l):
+        name = l.require(l.image_name_component)
+
+        self = AttributeNode(name)
+
+        def line(lex):
+            while True:
+                if parse_property(lex, self.final_properties, self.expr_properties, ATTRIBUTE_PROPERTIES):
+                    continue
+
+                if lex.match("null"):
+                    displayable = "Null()"
+                else:
+                    displayable = lex.simple_expression()
+
+                if displayable is not None:
+
+                    if self.displayable is not None:
+                        lex.error("An attribute can only have zero or one displayable, two found : {} and {}".format(displayable, self.displayable))
+
+                    self.displayable = displayable
+                    continue
+
+                break
+
+        line(l)
+
+        if not l.match(":"):
+            l.expect_eol()
+            l.expect_noblock("attribute")
+            return self
+
+        l.expect_block("attribute")
+        l.expect_eol()
+
+        ll = l.subblock_lexer()
+
+        while ll.advance():
+            line(ll)
+            ll.expect_eol()
+            ll.expect_noblock("attribute")
+
+        return self
 
 class AttributeGroupNode(LayerNode):
     pass
