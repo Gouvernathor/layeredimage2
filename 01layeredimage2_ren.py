@@ -572,6 +572,9 @@ class AttributeGroupNode(LayerNode):
             l.expect_eol()
             l.expect_noblock("group")
 
+        if ("auto" in self.final_properties) and (group_name == "multiple") and ("variant" not in self.final_properties):
+            l.error("A group without a variant cannot be multiple and auto at the same time")
+
         return self
 
 class ConditionNode(LayerNode):
