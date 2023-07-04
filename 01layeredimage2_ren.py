@@ -600,7 +600,20 @@ class LayeredImageNode(python_object):
         return self
 
     def execute(self):
-        raise NotImplementedError
+        properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
+
+        l = []
+        for i in self.children:
+            l.extend(i.execute())
+
+        renpy.image(
+            self.name,
+            LayeredImage(
+                l,
+                name=self.name.replace(" ", "_"),
+                **properties,
+            )
+        )
 
 
 renpy.register_statement("layeredimage2", parse=LayeredImageNode.parse, execute=LayeredImageNode.execute, init=True, block=True)
