@@ -417,7 +417,6 @@ class LayeredImage(object):
         return tuple(rv)
 
 
-# almost same as original, but takes and mutates a dict
 def parse_property(l, final_properties, expr_properties, names):
     """
     Parses a property among the provided names and stores the
