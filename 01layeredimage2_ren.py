@@ -30,7 +30,8 @@ LAYER_PROPERTIES = ATL_PROPERTIES | {"if_attr", "at"}
 # The properties for attribute layers
 ATTRIBUTE_PROPERTIES = LAYER_PROPERTIES | {"variant", "default"}
 # The properties for the group statement
-GROUP_PROPERTIES = LAYER_PROPERTIES # | {"auto", "variant", "prefix"}
+GROUP_BLOCK_PROPERTIES = LAYER_PROPERTIES | {"auto"}
+GROUP_INLINE_PROPERTIES = GROUP_BLOCK_PROPERTIES | {"prefix", "variant"}
 # The properties for the always layers
 ALWAYS_PROPERTIES = LAYER_PROPERTIES
 # The properties for the condition layers
@@ -533,7 +534,44 @@ class AttributeNode(LayerNode):
         return [Attribute(group_name, self.name, resolve_image(self.displayable), group_args=group_args, **properties)]
 
 class AttributeGroupNode(LayerNode):
-    pass
+    def __init__(self, li_name, group_name):
+        self.li_name = li_name
+        self.group_name = group_name
+        self.final_properties = {}
+        self.expr_properties = {}
+        self.children = []
+
+    @staticmethod
+    def parse(l, li_name):
+        group_name = l.require(l.image_name_component)
+
+        self = AttributeGroupNode(li_name, group_name)
+
+        while parse_property(l, self.final_properties, self.expr_properties, GROUP_INLINE_PROPERTIES):
+            pass
+
+        if l.match(":"):
+            l.expect_block("group")
+            l.expect_eol()
+
+            ll = l.subblock_lexer()
+
+            while ll.advance():
+                if ll.keyword("attribute"):
+                    self.children.append(AttributeNode.parse(ll))
+                    continue
+
+                while parse_property(ll, self.final_properties, self.expr_properties, GROUP_BLOCK_PROPERTIES):
+                    pass
+
+                ll.expect_eol()
+                ll.expect_noblock("group property")
+
+        else:
+            l.expect_eol()
+            l.expect_noblock("group")
+
+        return self
 
 class ConditionNode(LayerNode):
     def __init__(self, condition):
@@ -697,7 +735,7 @@ class LayeredImageNode(python_object):
                 self.children.append(AttributeNode.parse(ll))
 
             elif ll.keyword("group"):
-                self.children.append(AttributeGroupNode.parse(ll))
+                self.children.append(AttributeGroupNode.parse(ll, name))
 
             elif ll.keyword("if"):
                 self.children.append(ConditionGroupNode.parse(ll))
