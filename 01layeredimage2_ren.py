@@ -536,10 +536,71 @@ class AttributeGroupNode(LayerNode):
     pass
 
 class ConditionNode(LayerNode):
-    pass
+    def __init__(self, condition):
+        self.condition = condition
+        self.displayable = None
+        self.final_properties = {}
+        self.expr_properties = {}
+
+    @staticmethod
+    def parse(l, need_expr):
+        l.skip_whitespace()
+
+        if need_expr:
+            condition = l.require(l.comma_expression)
+        else:
+            condition = None
+        self = ConditionNode(condition)
+
+        l.require(":")
+        l.expect_block("if/elif/else")
+        l.expect_eol()
+
+        ll = l.subblock_lexer()
+
+        while ll.advance():
+            while True:
+                if parse_property(ll, self.final_properties, self.expr_properties, CONDITION_PROPERTIES):
+                    continue
+
+                displayable = ll.simple_expression()
+
+                if displayable is not None:
+                    if self.displayable is not None:
+                        ll.error("An if, elif or else statement can only have one displayable, two found : {} and {}".format(displayable, self.displayable))
+
+                    self.displayable = displayable
+                    continue
+                break
+
+            ll.expect_noblock("if/elif/else properties")
+            ll.expect_eol()
+
+        if self.displayable is None:
+            ll.error("An if, elif or else statement must have a displayable")
+
+        return self
 
 class ConditionGroupNode(LayerNode):
-    pass
+    def __init__(self, conditions=()):
+        self.conditions = conditions
+
+    @staticmethod
+    def parse(l):
+        conditions = []
+
+        conditions.append(ConditionNode.parse(l, True))
+        l.advance()
+
+        while l.keyword("elif"):
+            conditions.append(ConditionNode.parse(l, True))
+            l.advance()
+
+        if l.keyword("else"):
+            conditions.append(ConditionNode.parse(l, False))
+            l.advance()
+
+        return ConditionGroupNode(conditions)
 
 class AlwaysNode(LayerNode):
     def __init__(self):
