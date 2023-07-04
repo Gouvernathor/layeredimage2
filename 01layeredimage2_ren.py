@@ -543,7 +543,52 @@ class ConditionGroupNode(LayerNode):
     pass
 
 class AlwaysNode(LayerNode):
-    pass
+    def __init__(self):
+        self.displayable = None
+        self.final_properties = {}
+        self.expr_properties = {}
+
+    @staticmethod
+    def parse(l):
+        self = AlwaysNode()
+
+        def line(lex):
+            while True:
+                if parse_property(lex, self.final_properties, self.expr_properties, ALWAYS_PROPERTIES):
+                    continue
+
+                displayable = lex.simple_expression()
+
+                if displayable is not None:
+                    if self.displayable is not None:
+                        lex.error("The always statement can only have one displayable, two found : {} and {}".format(displayable, self.displayable))
+
+                    self.displayable = displayable
+                    continue
+
+                break
+
+        line(l)
+
+        if not l.match(":"):
+            l.expect_eol()
+            l.expect_noblock("always")
+            return self
+
+        l.expect_block("always")
+        l.expect_eol()
+
+        ll = l.subblock_lexer()
+
+        while ll.advance():
+            line(ll)
+            ll.expect_eol()
+            ll.expect_noblock("always")
+
+        if self.displayable is None:
+            l.error("The always statement must have a displayable")
+
+        return self
 
 class LayeredImageNode(python_object):
     def __init__(self, name):
