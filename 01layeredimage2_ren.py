@@ -589,6 +589,10 @@ class AlwaysNode(LayerNode):
 
         return self
 
+    def execute(self):
+        properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
+        return [Always(resolve_image(self.displayable), **properties)]
+
 class LayeredImageNode(python_object):
     def __init__(self, name):
         self.name = name
