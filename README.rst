@@ -87,5 +87,6 @@ Remove the name in multiple groups:
 - If the group is not auto, that's enough : ``group a multiple`` -> ``group multiple``
 - For auto multiple groups without a variant, add the former group name as a variant : ``group a multiple`` -> ``group multiple variant a``
 - For auto multiple groups with a variant, add the former group name to the variant with an underscore : ``group a multiple variant "b"`` -> ``group multiple variant a_b``
+- For auto multiple groups with attributes declared inside them, write the line just above on its own, and then add another multiple group with no variant, with the same properties, and with the attributes inside. Yes, it's complex, but you were doing something weird anyway.
 
 Rephrase the ``if_`` properties using the new ``if_attr`` : ``if_any ["a", "b"] if_all ["c", "d"] if_not ["e", "f"]`` -> ``if_attr ((a or b) and c and d and not (e or f))``
