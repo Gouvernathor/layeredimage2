@@ -525,6 +525,10 @@ class AttributeNode(LayerNode):
         return self
 
     def execute(self, group_name=None, **group_properties):
+        if "if_attr" in self.final_properties:
+            if "if_attr" in group_properties:
+                self.final_properties["if_attr"] &= group_properties.pop("if_attr")
+
         group_args = {k: group_properties.pop(k) for k in ATL_PROPERTIES.intersection(group_properties)}
 
         properties = (group_properties # the remaining ones, overwritten by the following
