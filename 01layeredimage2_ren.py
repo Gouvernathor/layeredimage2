@@ -1,5 +1,4 @@
 import renpy # type: ignore
-import store # type: ignore
 
 python_object = object
 
@@ -68,8 +67,24 @@ class IfAttr(python_object):
     def __or__(self, other):
         return IfOr(self, other)
 
+    @staticmethod
+    def parse(l):
+        l.require(r"\(", "parenthesized if_attr expression")
+        rv = IfOr.parse(l)
+        l.require(r"\)", "closing parenthesis1")
+        return rv
+
+    def __repr__(self): # only for test purposes
+        t = type(self)
+        return "".join((
+            t.__name__,
+            "(",
+            ", ".join(f"{k}={getattr(self, k)!r}" for k in t.__slots__),
+            ")",
+        ))
+
 class IfAttribute(IfAttr):
-    __slots__ = ("attribute")
+    __slots__ = ("attribute",)
 
     def __init__(self, attribute):
         self.attribute = attribute
@@ -77,14 +92,32 @@ class IfAttribute(IfAttr):
     def check(self, attributes):
         return self.attribute in attributes
 
+    @staticmethod
+    def parse(l):
+        if l.match(r"\("):
+            rv = IfOr.parse(l)
+            l.require(r"\)", "closing parenthesis2")
+            return rv
+        else:
+            name = l.require(l.image_name_component, "attribute name")
+            rv = IfAttribute(name)
+            return rv
+
 class IfNot(IfAttr):
-    __slots__ = ("ifattr")
+    __slots__ = ("ifattr",)
 
     def __init__(self, ifattr):
         self.ifattr = ifattr
 
     def check(self, attributes):
         return not self.ifattr.check(attributes)
+
+    @staticmethod
+    def parse(l):
+        if l.match("!"):
+            return IfNot(IfNot.parse(l))
+        else:
+            return IfAttribute.parse(l)
 
 class IfAnd(IfAttr):
     __slots__ = ("first", "second")
@@ -96,6 +129,13 @@ class IfAnd(IfAttr):
     def check(self, attributes):
         return self.first.check(attributes) and self.second.check(attributes)
 
+    @staticmethod
+    def parse(l):
+        rv = IfNot.parse(l)
+        while l.match("&"):
+            rv = IfAnd(rv, IfNot.parse(l))
+        return rv
+
 class IfOr(IfAttr):
     __slots__ = ("first", "second")
 
@@ -105,6 +145,13 @@ class IfOr(IfAttr):
 
     def check(self, attributes):
         return self.first.check(attributes) or self.second.check(attributes)
+
+    @staticmethod
+    def parse(l):
+        rv = IfAnd.parse(l)
+        while l.match(r"\|"):
+            rv = IfOr(rv, IfAnd.parse(l))
+        return rv
 
 
 class Layer(object):
