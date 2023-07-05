@@ -17,10 +17,10 @@ from store.layeredimage import format_function # type: ignore
 
 EMPTYMAP = MappingProxyType({})
 
-ATL_PROPERTIES = frozenset(i for i in renpy.atl.PROPERTIES)
+ATL_PROPERTIES = frozenset(renpy.atl.PROPERTIES)
 
 # The properties for the Fixed wrapping the layeredimage
-FIXED_PROPERTIES = frozenset(i for i in renpy.sl2.slproperties.position_property_names).union(renpy.sl2.slproperties.box_property_names)
+FIXED_PROPERTIES = frozenset(renpy.sl2.slproperties.position_property_names).union(renpy.sl2.slproperties.box_property_names)
 
 # The properties taken at the base level of the layeredimage
 BASE_PROPERTIES = ATL_PROPERTIES | FIXED_PROPERTIES | {"image_format", "format_function", "attribute_function", "offer_screen", "at"}
