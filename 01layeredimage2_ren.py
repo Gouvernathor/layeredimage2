@@ -658,8 +658,8 @@ class AttributeGroupNode(LayerNode):
             while ll.advance():
                 if ll.keyword("attribute"):
                     attribute_node = AttributeNode.parse(ll)
-                    if "variant" in attribute_node.final_properties:
-                        ll.error("Attribute {} cannot have a variant while in a group".format(attribute_node.name))
+                    # if "variant" in attribute_node.final_properties:
+                    #     ll.error("Attribute {} cannot have a variant while in a group".format(attribute_node.name))
                     self.children.append(attribute_node)
                     continue
 
@@ -674,10 +674,9 @@ class AttributeGroupNode(LayerNode):
             l.expect_noblock("group")
 
         if "variant" in self.final_properties:
-            # for an in self.children:
-            #     if "variant" in an.final_properties:
-            #         l.error("Attribute {} has a variant, it cannot be in group {} which also has a variant".format(an.name, group_name))
-            pass
+            for an in self.children:
+                if "variant" in an.final_properties:
+                    l.error("Attribute {} has a variant, it cannot be in group {} which also has a variant".format(an.name, group_name))
         elif (group_name is None) and ("auto" in self.final_properties):
             l.error("A group without a variant cannot be multiple and auto at the same time")
 
