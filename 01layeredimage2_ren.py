@@ -611,6 +611,8 @@ class AttributeNode(LayerNode):
             ll.expect_eol()
             ll.expect_noblock("attribute")
 
+        if (self.displayable is not None) and ("variant" in self.final_properties):
+            l.error("An attribute cannot have both a variant and a provided displayable")
         return self
 
     def execute(self, group_name=None, **group_properties):

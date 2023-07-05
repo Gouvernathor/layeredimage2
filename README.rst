@@ -67,6 +67,8 @@ Motivation and issues with the legacy syntax
 
     The ``variant`` property is however forbidden on attributes inside groups that already have a variant, and possibly on attributes that are in any group (I'll have to make that decision eventually).
 
+    It is also forbidden in attributes that are given an explicit displayable (because in that case the variant is pointless).
+
 - ``if_any``, ``if_all`` and ``if_not`` (communally the ``if_`` properties) are very handy.
 
   However, a combination of these properties only covers conditionals which can be expressed as ``any(...) and all(...) and not any(...)``.
