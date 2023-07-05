@@ -79,7 +79,7 @@ class IfAttr(python_object):
         return "".join((
             t.__name__,
             "(",
-            ", ".join(f"{k}={getattr(self, k)!r}" for k in t.__slots__),
+            ", ".join(repr(getattr(self, k)) for k in t.__slots__),
             ")",
         ))
 
@@ -114,7 +114,7 @@ class IfNot(IfAttr):
 
     @staticmethod
     def parse(l):
-        if l.match("!"):
+        if l.match("!") or l.keyword("not"):
             return IfNot(IfNot.parse(l))
         else:
             return IfAttribute.parse(l)
@@ -132,7 +132,7 @@ class IfAnd(IfAttr):
     @staticmethod
     def parse(l):
         rv = IfNot.parse(l)
-        while l.match("&"):
+        while l.match("&") or l.keyword("and"):
             rv = IfAnd(rv, IfNot.parse(l))
         return rv
 
@@ -149,7 +149,7 @@ class IfOr(IfAttr):
     @staticmethod
     def parse(l):
         rv = IfAnd.parse(l)
-        while l.match(r"\|"):
+        while l.match(r"\|") or l.keyword("or"):
             rv = IfOr(rv, IfAnd.parse(l))
         return rv
 
