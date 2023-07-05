@@ -696,11 +696,15 @@ class AttributeGroupNode(LayerNode):
 
         if auto:
             seen = set(a.raw_attribute_name for a in rv)
-            pattern = self.li_name.replace(" ", "_") + "_"
-            if group_name is not None:
-                pattern += group_name + "_"
-            if variant:
-                pattern += variant + "_"
+            pattern = format_function(
+                what="auto group attribute",
+                name=self.li_name.replace(" ", "_"),
+                group=group_name or None,
+                variant=variant or None,
+                attribute="",
+                image=None,
+                image_format=None,
+            )
 
             for i in renpy.list_images():
                 if i.startswith(pattern):
