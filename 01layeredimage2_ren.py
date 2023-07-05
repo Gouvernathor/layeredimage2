@@ -55,14 +55,56 @@ def resolve_image(img):
 class IfAttr(python_object):
     """
     Represents an if_attr expression.
+    Abstract base class.
     """
     __slots__ = ()
 
-    def __init__(self):
-        raise NotImplementedError
+    def __and__(self, other):
+        return IfAnd(self, other)
+
+    def __invert__(self):
+        return IfNot(self)
+
+    def __or__(self, other):
+        return IfOr(self, other)
+
+class IfAttribute(IfAttr):
+    __slots__ = ("attribute")
+
+    def __init__(self, attribute):
+        self.attribute = attribute
 
     def check(self, attributes):
-        raise NotImplementedError
+        return self.attribute in attributes
+
+class IfNot(IfAttr):
+    __slots__ = ("ifattr")
+
+    def __init__(self, ifattr):
+        self.ifattr = ifattr
+
+    def check(self, attributes):
+        return not self.ifattr.check(attributes)
+
+class IfAnd(IfAttr):
+    __slots__ = ("first", "second")
+
+    def __init__(self, first, second):
+        self.first = first
+        self.second = second
+
+    def check(self, attributes):
+        return self.first.check(attributes) and self.second.check(attributes)
+
+class IfOr(IfAttr):
+    __slots__ = ("first", "second")
+
+    def __init__(self, first, second):
+        self.first = first
+        self.second = second
+
+    def check(self, attributes):
+        return self.first.check(attributes) or self.second.check(attributes)
 
 
 class Layer(object):
