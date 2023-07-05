@@ -10,8 +10,7 @@ python early in layeredimage2:
 
 from types import MappingProxyType
 from collections import defaultdict
-# from store import Transform, ConditionSwitch, Fixed, Null, config, Text, eval, At
-from store import At, ConditionSwitch, config, Fixed, Null, Text, Transform # type: ignore
+from store import At, ConditionSwitch, config, eval, Fixed, Null, Text, Transform # type: ignore
 
 from store.layeredimage import format_function # type: ignore
 
