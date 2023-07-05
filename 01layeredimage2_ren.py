@@ -544,7 +544,8 @@ class LayerNode(python_object):
     just to clarify the interface of the Node classes.
     """
     def __init__(self):
-        raise NotImplementedError
+        self.final_properties = {}
+        self.expr_properties = {}
 
     @staticmethod
     def parse(l):
@@ -564,10 +565,9 @@ class LayerNode(python_object):
 
 class AttributeNode(LayerNode):
     def __init__(self, name):
+        super().__init__()
         self.name = name
         self.displayable = None
-        self.final_properties = {}
-        self.expr_properties = {}
 
     @staticmethod
     def parse(l):
@@ -631,10 +631,9 @@ class AttributeNode(LayerNode):
 
 class AttributeGroupNode(LayerNode):
     def __init__(self, li_name, group_name):
+        super().__init__()
         self.li_name = li_name
         self.group_name = group_name
-        self.final_properties = {}
-        self.expr_properties = {}
         self.children = []
 
     @staticmethod
@@ -713,10 +712,9 @@ class AttributeGroupNode(LayerNode):
 
 class ConditionNode(LayerNode):
     def __init__(self, condition):
+        super().__init__()
         self.condition = condition
         self.displayable = None
-        self.final_properties = {}
-        self.expr_properties = {}
 
     @staticmethod
     def parse(l, need_expr):
@@ -763,6 +761,7 @@ class ConditionNode(LayerNode):
 
 class ConditionGroupNode(LayerNode):
     def __init__(self, conditions=()):
+        # no super, on purpose
         self.conditions = conditions
 
     @staticmethod
@@ -792,9 +791,8 @@ class ConditionGroupNode(LayerNode):
 
 class AlwaysNode(LayerNode):
     def __init__(self):
+        super().__init__()
         self.displayable = None
-        self.final_properties = {}
-        self.expr_properties = {}
 
     @staticmethod
     def parse(l):
