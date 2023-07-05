@@ -528,7 +528,7 @@ def parse_property(l, final_properties, expr_properties, names):
     if name in ("auto", "default"):
         final_properties[name] = True
     elif name == "if_attr":
-        raise NotImplementedError
+        final_properties[name] = IfAttr.parse(l)
     elif name in ("variant", "prefix"):
         final_properties[name] = l.require(l.image_name_component)
     elif name == "at":
