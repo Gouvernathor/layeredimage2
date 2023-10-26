@@ -21,6 +21,7 @@ Changes in a nutshell
 #. auto multiple groups (groups which are both auto and multiple at the same time) change in behavior slightly by never using the group name at all (unlikely to have any real-life consequence, but the new behavior is more consistent)
 #. attributes can take a variant, if they don't have an explicit displayable and if they're not in a group with a variant
 #. if_any, if_all and if_not are gone, and replaced with if_attr and a dedicated, shorter syntax which does away with the quotes and allows a greater variety of conditions to be expressed
+#. you can add pass to any block (layeredimage, always, group, attribute), except if/elif/else blocks which can't be empty in the first place
 
 Motivation and issues with the legacy syntax
 --------------------------------------------

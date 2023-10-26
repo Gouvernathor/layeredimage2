@@ -606,6 +606,11 @@ class AttributeNode(LayerNode):
         ll = l.subblock_lexer()
 
         while ll.advance():
+            if ll.keyword("pass"):
+                ll.expect_eol()
+                ll.expect_noblock("pass statement")
+                continue
+
             line(ll)
             ll.expect_eol()
             ll.expect_noblock("attribute")
@@ -654,6 +659,11 @@ class AttributeGroupNode(LayerNode):
             ll = l.subblock_lexer()
 
             while ll.advance():
+                if ll.keyword("pass"):
+                    ll.expect_eol()
+                    ll.expect_noblock("pass statement")
+                    continue
+
                 if ll.keyword("attribute"):
                     attribute_node = AttributeNode.parse(ll)
                     # if "variant" in attribute_node.final_properties:
@@ -736,6 +746,12 @@ class ConditionNode(LayerNode):
         ll = l.subblock_lexer()
 
         while ll.advance():
+            # not useful since an if/elif/else needs a displayable so it can't be empty
+            # if ll.keyword("pass"):
+            #     ll.expect_eol()
+            #     ll.expect_noblock("pass statement")
+            #     continue
+
             while True:
                 if parse_property(ll, self.final_properties, self.expr_properties, CONDITION_PROPERTIES):
                     continue
@@ -830,6 +846,12 @@ class AlwaysNode(LayerNode):
         ll = l.subblock_lexer()
 
         while ll.advance():
+            # useful since an always can have its child inline so it can have an empty block
+            if ll.keyword("pass"):
+                ll.expect_eol()
+                ll.expect_noblock("pass statement")
+                continue
+
             line(ll)
             ll.expect_eol()
             ll.expect_noblock("always")
@@ -881,6 +903,10 @@ class LayeredImageNode(python_object):
 
             elif ll.keyword("always"):
                 self.children.append(AlwaysNode.parse(ll))
+
+            elif ll.keyword("pass"):
+                ll.expect_eol()
+                ll.expect_noblock("pass statement")
 
             else:
                 while parse_property(ll, self.final_properties, self.expr_properties, BASE_PROPERTIES):
