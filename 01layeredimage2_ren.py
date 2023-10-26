@@ -60,10 +60,10 @@ class IfAttr(python_object):
     def __and__(self, other):
         return IfAnd(self, other)
 
-    def __invert__(self):
+    def __invert__(self): # only for test purposes
         return IfNot(self)
 
-    def __or__(self, other):
+    def __or__(self, other): # only for test purposes
         return IfOr(self, other)
 
     @staticmethod
@@ -166,7 +166,7 @@ class Layer(object):
 
     def check(self, attributes):
         """
-        Wrapper for if_attr.check, allows if_attr to be None in most cases.
+        Wrapper for if_attr.check, allows self.if_attr to be None in most cases.
         """
         if self.if_attr is None:
             return True
@@ -508,9 +508,9 @@ class LayeredImage(object):
 
 def parse_property(l, final_properties, expr_properties, names):
     """
-    Parses a property among the provided names and stores the
-    evalable value inside the properties dict.
-    Returns True if it found a property, False if it didn't.
+    Parses a property among the provided names and stores it
+    inside the appropriate dict.
+    Returns True if it found a property, False if it did not.
     """
 
     check = l.checkpoint()
