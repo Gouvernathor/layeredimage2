@@ -10,8 +10,9 @@ python early in layeredimage2:
 
 from types import MappingProxyType
 from collections import defaultdict
-from store import At, ConditionSwitch, config, eval, Fixed, Null, Text, Transform # type: ignore
+from renpy.atl import parse_atl, RawBlock # type: ignore
 from renpy.display.transform import ATLTransform # type: ignore
+from store import At, ConditionSwitch, config, eval, Fixed, Null, Text, Transform # type: ignore
 
 from store.layeredimage import format_function # type: ignore
 
@@ -45,8 +46,8 @@ predict_all = None
 def resolve_image(img):
     if img is None:
         return None
-    if isinstance(img, renpy.atl.RawBlock):
-        return renpy.display.transform.ATLTransform(img)
+    if isinstance(img, RawBlock):
+        return ATLTransform(img)
     else:
         return eval(img)
 
@@ -539,7 +540,7 @@ def parse_property(l, final_properties, expr_properties, names):
             l.require(":")
             l.expect_eol()
             l.expect_block("ATL")
-            final_properties[name] = ATLTransform(renpy.atl.parse_atl(l.subblock_lexer()))
+            final_properties[name] = ATLTransform(parse_atl(l.subblock_lexer()))
             return 2
         else:
             expr_properties[name] = l.require(l.comma_expression)
@@ -559,7 +560,7 @@ def parse_displayable(l):
         l.require(":")
         l.expect_eol()
         l.expect_block("ATL image")
-        return renpy.atl.parse_atl(l.subblock_lexer())
+        return parse_atl(l.subblock_lexer())
     else:
         return l.simple_expression()
 
@@ -623,7 +624,7 @@ class AttributeNode(LayerNode):
 
                     self.displayable = displayable
 
-                    if isinstance(displayable, renpy.atl.RawBlock):
+                    if isinstance(displayable, RawBlock):
                         got_block = True
                         return
                     continue
@@ -829,7 +830,7 @@ class ConditionNode(LayerNode):
 
                     self.displayable = displayable
 
-                    if isinstance(displayable, renpy.atl.RawBlock):
+                    if isinstance(displayable, RawBlock):
                         got_block = True
                         break
                     continue
@@ -908,7 +909,7 @@ class AlwaysNode(LayerNode):
 
                     self.displayable = displayable
 
-                    if isinstance(displayable, renpy.atl.RawBlock):
+                    if isinstance(displayable, RawBlock):
                         got_block = True
                         return
                     continue
