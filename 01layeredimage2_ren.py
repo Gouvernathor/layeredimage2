@@ -294,7 +294,7 @@ class ConditionGroup(Layer):
                 continue
 
             args.append(i.condition)
-            args.append(i.image)
+            args.append(i.displayable)
 
         args.append(None)
         args.append(Null())
