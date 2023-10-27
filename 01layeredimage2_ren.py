@@ -374,7 +374,8 @@ class LayeredImage(object):
         for a1 in attributes:
             for gn in self.attribute_to_groups[a1]:
                 for a2 in self.group_to_attributes[gn]:
-                    banned.add(a2)
+                    if a1 != a2:
+                        banned.add(a2)
 
         return banned
 
