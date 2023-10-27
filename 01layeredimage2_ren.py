@@ -45,8 +45,8 @@ predict_all = None
 def resolve_image(img):
     if img is None:
         return None
-    # if isinstance(img, renpy.atl.RawBlock):
-    #     return renpy.display.transform.ATLTransform(img)
+    if isinstance(img, renpy.atl.RawBlock):
+        return renpy.display.transform.ATLTransform(img)
     else:
         return eval(img)
 
@@ -548,6 +548,21 @@ def parse_property(l, final_properties, expr_properties, names):
 
     return 1
 
+def parse_displayable(l):
+    """
+    Parses either "image:" opening an ATL block,
+    or a simple expression,
+    or None.
+    """
+
+    if l.keyword("image"):
+        l.require(":")
+        l.expect_eol()
+        l.expect_block("ATL image")
+        return renpy.atl.parse_atl(l.subblock_lexer())
+    else:
+        return l.simple_expression()
+
 class LayerNode(python_object):
     """
     An abstract base class which will probably be removed eventually,
@@ -600,13 +615,17 @@ class AttributeNode(LayerNode):
                 if lex.match("null"):
                     displayable = "Null()"
                 else:
-                    displayable = lex.simple_expression()
+                    displayable = parse_displayable(lex)
 
                 if displayable is not None:
                     if self.displayable is not None:
                         lex.error("An attribute can only have zero or one displayable, two found : {} and {}".format(displayable, self.displayable))
 
                     self.displayable = displayable
+
+                    if isinstance(displayable, renpy.atl.RawBlock):
+                        got_block = True
+                        return
                     continue
 
                 break
@@ -803,12 +822,16 @@ class ConditionNode(LayerNode):
                         break
                     continue
 
-                displayable = ll.simple_expression()
+                displayable = parse_displayable(ll)
                 if displayable is not None:
                     if self.displayable is not None:
                         ll.error("An if, elif or else statement can only have one displayable, two found : {} and {}".format(displayable, self.displayable))
 
                     self.displayable = displayable
+
+                    if isinstance(displayable, renpy.atl.RawBlock):
+                        got_block = True
+                        break
                     continue
 
                 break
@@ -877,13 +900,17 @@ class AlwaysNode(LayerNode):
                         return
                     continue
 
-                displayable = lex.simple_expression()
+                displayable = parse_displayable(lex)
 
                 if displayable is not None:
                     if self.displayable is not None:
                         lex.error("The always statement can only have one displayable, two found : {} and {}".format(displayable, self.displayable))
 
                     self.displayable = displayable
+
+                    if isinstance(displayable, renpy.atl.RawBlock):
+                        got_block = True
+                        return
                     continue
 
                 break
