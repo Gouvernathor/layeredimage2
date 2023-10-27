@@ -37,9 +37,6 @@ ALWAYS_PROPERTIES = LAYER_PROPERTIES
 # The properties for the condition layers
 CONDITION_PROPERTIES = LAYER_PROPERTIES
 
-# The properties whose result should not be evaluated, from the Node to the Layer
-VERBATIM_PROPERTIES = frozenset(("if_attr", "variant", "prefix", "default", "auto", "multiple"))
-
 predict_all = None
 
 
