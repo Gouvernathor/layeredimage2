@@ -22,6 +22,7 @@ Changes in a nutshell
 #. attributes can take a variant, if they don't have an explicit displayable and if they're not in a group with a variant
 #. if_any, if_all and if_not are gone, and replaced with if_attr and a dedicated, shorter syntax which does away with the quotes and allows a greater variety of conditions to be expressed
 #. you can add pass to any block (layeredimage, always, group, attribute), except if/elif/else blocks which can't be empty in the first place
+#. you can use the ``at transform:`` syntax with an ATL block like in screen language, in any place where you could use the ``at`` property, and you can use the similar ``image:`` syntax with an ATL block in any place requiring a displayable : inside if/elif/else blocks, and inline and in the blocks of always and attribute statements
 
 Motivation and issues with the legacy syntax
 --------------------------------------------
