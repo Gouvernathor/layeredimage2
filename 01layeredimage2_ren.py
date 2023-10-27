@@ -384,8 +384,6 @@ class LayeredImage(object):
     # same as the original
     def _duplicate(self, args):
 
-            name = " ".join(args.name + tuple(args.args))
-
             attributes = set(args.args)
             unknown = set(args.args)
             banned = self.get_banned(attributes)
