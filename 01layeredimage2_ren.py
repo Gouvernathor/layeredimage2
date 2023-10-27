@@ -11,6 +11,7 @@ python early in layeredimage2:
 from types import MappingProxyType
 from collections import defaultdict
 from store import At, ConditionSwitch, config, eval, Fixed, Null, Text, Transform # type: ignore
+from renpy.display.transform import ATLTransform # type: ignore
 
 from store.layeredimage import format_function # type: ignore
 
@@ -511,7 +512,9 @@ def parse_property(l, final_properties, expr_properties, names):
     """
     Parses a property among the provided names and stores it
     inside the appropriate dict.
-    Returns True if it found a property, False if it did not.
+    Returns 0 if it didn't find any property,
+    1 if it found a normal, inline property,
+    and 2 if it found a block property (meaning "at transform").
     """
 
     check = l.checkpoint()
@@ -520,7 +523,7 @@ def parse_property(l, final_properties, expr_properties, names):
 
     if name not in names:
         l.revert(check)
-        return False
+        return 0
 
     if (name in final_properties) or (name in expr_properties):
         l.error("Duplicate property: {}".format(name))
@@ -532,11 +535,18 @@ def parse_property(l, final_properties, expr_properties, names):
     elif name in ("variant", "prefix"):
         final_properties[name] = l.require(l.image_name_component)
     elif name == "at":
-        expr_properties[name] = l.require(l.comma_expression)
+        if l.keyword("transform"):
+            l.require(":")
+            l.expect_eol()
+            l.expect_block("ATL")
+            final_properties[name] = ATLTransform(renpy.atl.parse_atl(l.subblock_lexer()))
+            return 2
+        else:
+            expr_properties[name] = l.require(l.comma_expression)
     else:
         expr_properties[name] = l.require(l.simple_expression)
 
-    return True
+    return 1
 
 class LayerNode(python_object):
     """
@@ -575,9 +585,16 @@ class AttributeNode(LayerNode):
 
         self = AttributeNode(name)
 
+        got_block = False
+
         def line(lex):
+            nonlocal got_block
             while True:
-                if parse_property(lex, self.final_properties, self.expr_properties, ATTRIBUTE_PROPERTIES):
+                pp = parse_property(lex, self.final_properties, self.expr_properties, ATTRIBUTE_PROPERTIES)
+                if pp:
+                    if pp == 2:
+                        got_block = True
+                        return
                     continue
 
                 if lex.match("null"):
@@ -596,7 +613,9 @@ class AttributeNode(LayerNode):
 
         line(l)
 
-        if not l.match(":"):
+        if got_block:
+            return self
+        elif not l.match(":"):
             l.expect_eol()
             l.expect_noblock("attribute")
             return self
@@ -613,8 +632,11 @@ class AttributeNode(LayerNode):
                 continue
 
             line(ll)
-            ll.expect_eol()
-            ll.expect_noblock("attribute")
+            if got_block:
+                got_block = False
+            else:
+                ll.expect_eol()
+                ll.expect_noblock("attribute")
 
         if (self.displayable is not None) and ("variant" in self.final_properties):
             l.error("An attribute cannot have both a variant and a provided displayable")
@@ -650,37 +672,55 @@ class AttributeGroupNode(LayerNode):
 
         self = AttributeGroupNode(li_name, group_name)
 
-        while parse_property(l, self.final_properties, self.expr_properties, GROUP_INLINE_PROPERTIES):
-            pass
+        got_block = False
 
-        if l.match(":"):
-            l.expect_block("group")
-            l.expect_eol()
+        while True:
+            pp = parse_property(l, self.final_properties, self.expr_properties, GROUP_INLINE_PROPERTIES)
+            if pp == 1:
+                continue
+            elif pp == 2:
+                got_block = True
+            break
 
-            ll = l.subblock_lexer()
+        if not got_block:
+            if l.match(":"):
+                l.expect_block("group")
+                l.expect_eol()
 
-            while ll.advance():
-                if ll.keyword("pass"):
-                    ll.expect_eol()
-                    ll.expect_noblock("pass statement")
-                    continue
+                ll = l.subblock_lexer()
 
-                if ll.keyword("attribute"):
-                    attribute_node = AttributeNode.parse(ll)
-                    # if "variant" in attribute_node.final_properties:
-                    #     ll.error("Attribute {} cannot have a variant while in a group".format(attribute_node.name))
-                    self.children.append(attribute_node)
-                    continue
+                while ll.advance():
+                    got_block = False
 
-                while parse_property(ll, self.final_properties, self.expr_properties, GROUP_BLOCK_PROPERTIES):
-                    pass
+                    if ll.keyword("pass"):
+                        ll.expect_eol()
+                        ll.expect_noblock("pass statement")
+                        continue
 
-                ll.expect_eol()
-                ll.expect_noblock("group property")
+                    if ll.keyword("attribute"):
+                        attribute_node = AttributeNode.parse(ll)
+                        # if "variant" in attribute_node.final_properties:
+                        #     ll.error("Attribute {} cannot have a variant while in a group".format(attribute_node.name))
+                        self.children.append(attribute_node)
+                        continue
 
-        else:
-            l.expect_eol()
-            l.expect_noblock("group")
+                    while True:
+                        pp = parse_property(ll, self.final_properties, self.expr_properties, GROUP_BLOCK_PROPERTIES)
+                        if pp == 1:
+                            continue
+                        elif pp == 2:
+                            got_block = True
+                        break
+
+                    if got_block:
+                        got_block = False
+                    else:
+                        ll.expect_eol()
+                        ll.expect_noblock("group property")
+
+            else:
+                l.expect_eol()
+                l.expect_noblock("group")
 
         if "variant" in self.final_properties:
             for an in self.children:
@@ -753,8 +793,14 @@ class ConditionNode(LayerNode):
             #     ll.expect_noblock("pass statement")
             #     continue
 
+            got_block = False
+
             while True:
-                if parse_property(ll, self.final_properties, self.expr_properties, CONDITION_PROPERTIES):
+                pp = parse_property(ll, self.final_properties, self.expr_properties, CONDITION_PROPERTIES)
+                if pp:
+                    if pp == 2:
+                        got_block = True
+                        break
                     continue
 
                 displayable = ll.simple_expression()
@@ -767,8 +813,9 @@ class ConditionNode(LayerNode):
 
                 break
 
-            ll.expect_noblock("if/elif/else properties")
-            ll.expect_eol()
+            if not got_block:
+                ll.expect_noblock("if/elif/else properties")
+                ll.expect_eol()
 
         if self.displayable is None:
             ll.error("An if, elif or else statement must have a displayable")
@@ -818,9 +865,16 @@ class AlwaysNode(LayerNode):
     def parse(l):
         self = AlwaysNode()
 
+        got_block = False
+
         def line(lex):
+            nonlocal got_block
             while True:
-                if parse_property(lex, self.final_properties, self.expr_properties, ALWAYS_PROPERTIES):
+                pp = parse_property(lex, self.final_properties, self.expr_properties, ALWAYS_PROPERTIES)
+                if pp:
+                    if pp == 2:
+                        got_block = True
+                        return
                     continue
 
                 displayable = lex.simple_expression()
@@ -836,7 +890,9 @@ class AlwaysNode(LayerNode):
 
         line(l)
 
-        if not l.match(":"):
+        if got_block:
+            return self
+        elif not l.match(":"):
             l.expect_eol()
             l.expect_noblock("always")
             return self
@@ -854,8 +910,11 @@ class AlwaysNode(LayerNode):
                 continue
 
             line(ll)
-            ll.expect_eol()
-            ll.expect_noblock("always")
+            if got_block:
+                got_block = False
+            else:
+                ll.expect_eol()
+                ll.expect_noblock("always")
 
         if self.displayable is None:
             l.error("The always statement must have a displayable")
@@ -910,11 +969,13 @@ class LayeredImageNode(python_object):
                 ll.expect_noblock("pass statement")
 
             else:
-                while parse_property(ll, self.final_properties, self.expr_properties, BASE_PROPERTIES):
-                    pass
+                pp = 1
+                while pp == 1:
+                    pp = parse_property(ll, self.final_properties, self.expr_properties, BASE_PROPERTIES)
 
-                ll.expect_noblock("layeredimage element")
-                ll.expect_eol()
+                if not pp:
+                    ll.expect_noblock("layeredimage property")
+                    ll.expect_eol()
 
             ll.advance()
 
