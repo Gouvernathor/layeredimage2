@@ -684,7 +684,7 @@ class AttributeGroupNode(LayerNode):
         if "variant" in self.final_properties:
             for an in self.children:
                 if "variant" in an.final_properties:
-                    l.error("Attribute {} has a variant, it cannot be in group {} which also has a variant".format(an.name, group_name))
+                    l.error("Attribute {!r} has a variant, it cannot be in group {!r} which also has a variant".format(an.name, group_name))
         elif (group_name is None) and ("auto" in self.final_properties):
             l.error("A group without a variant cannot be multiple and auto at the same time")
 
@@ -746,7 +746,7 @@ class ConditionNode(LayerNode):
         ll = l.subblock_lexer()
 
         while ll.advance():
-            # not useful since an if/elif/else needs a displayable so it can't be empty
+            # not useful because an if/elif/else needs a displayable so it can't be empty
             # if ll.keyword("pass"):
             #     ll.expect_eol()
             #     ll.expect_noblock("pass statement")
@@ -757,13 +757,13 @@ class ConditionNode(LayerNode):
                     continue
 
                 displayable = ll.simple_expression()
-
                 if displayable is not None:
                     if self.displayable is not None:
                         ll.error("An if, elif or else statement can only have one displayable, two found : {} and {}".format(displayable, self.displayable))
 
                     self.displayable = displayable
                     continue
+
                 break
 
             ll.expect_noblock("if/elif/else properties")
