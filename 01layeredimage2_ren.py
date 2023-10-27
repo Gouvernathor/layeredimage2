@@ -628,7 +628,7 @@ class AttributeNode(LayerNode):
         while ll.advance():
             if ll.keyword("pass"):
                 ll.expect_eol()
-                ll.expect_noblock("pass statement")
+                ll.expect_noblock("pass")
                 continue
 
             line(ll)
@@ -694,7 +694,7 @@ class AttributeGroupNode(LayerNode):
 
                     if ll.keyword("pass"):
                         ll.expect_eol()
-                        ll.expect_noblock("pass statement")
+                        ll.expect_noblock("pass")
                         continue
 
                     if ll.keyword("attribute"):
@@ -790,7 +790,7 @@ class ConditionNode(LayerNode):
             # not useful because an if/elif/else needs a displayable so it can't be empty
             # if ll.keyword("pass"):
             #     ll.expect_eol()
-            #     ll.expect_noblock("pass statement")
+            #     ll.expect_noblock("pass")
             #     continue
 
             got_block = False
@@ -906,7 +906,7 @@ class AlwaysNode(LayerNode):
             # useful since an always can have its child inline so it can have an empty block
             if ll.keyword("pass"):
                 ll.expect_eol()
-                ll.expect_noblock("pass statement")
+                ll.expect_noblock("pass")
                 continue
 
             line(ll)
@@ -966,7 +966,7 @@ class LayeredImageNode(python_object):
 
             elif ll.keyword("pass"):
                 ll.expect_eol()
-                ll.expect_noblock("pass statement")
+                ll.expect_noblock("pass")
 
             else:
                 pp = 1
