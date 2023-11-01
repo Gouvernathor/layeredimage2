@@ -48,6 +48,16 @@ def resolve_image(img):
     else:
         return eval(img)
 
+def resolve_at(at):
+    """
+    Turns an ATL RawBlock, or a Transform, or an iterable of Transforms,
+    into a tuple of transforms.
+    Passing RawBlocks to the callables is not documented, of course.
+    """
+    if isinstance(at, RawBlock):
+        return (ATLTransform(at),)
+    return renpy.easy.to_tuple(at)
+
 
 class IfAttr(python_object):
     """
@@ -157,7 +167,7 @@ class Layer(object):
     Abstract base class for all the layers.
     """
     def __init__(self, if_attr=None, at=(), group_args=EMPTYMAP, **kwargs):
-        self.at = renpy.easy.to_tuple(at)
+        self.at = resolve_at(at)
         self.if_attr = if_attr
 
         self.group_args = group_args
@@ -340,7 +350,7 @@ class LayeredImage(object):
         for i in layers:
             self.add(i)
 
-        self.at = renpy.easy.to_tuple(at)
+        self.at = resolve_at(at)
 
         kwargs.setdefault("xfit", True)
         kwargs.setdefault("yfit", True)
@@ -559,12 +569,6 @@ def parse_displayable(l):
     else:
         return l.simple_expression()
 
-def resolve_at(properties):
-    if "at" in properties:
-        at = properties["at"]
-        if isinstance(at, RawBlock):
-            properties["at"] = ATLTransform(at)
-
 class LayerNode(python_object):
     """
     An abstract base class which will probably be removed eventually,
@@ -674,7 +678,6 @@ class AttributeNode(LayerNode):
             | self.final_properties
             | {k: eval(v) for k, v in self.expr_properties.items()}
         )
-        resolve_at(properties)
 
         return [Attribute(group_name, self.name, resolve_image(self.displayable), group_args=group_args, **properties)]
 
@@ -757,7 +760,6 @@ class AttributeGroupNode(LayerNode):
         group_name = self.group_name
 
         properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
-        resolve_at(properties)
 
         auto = properties.pop("auto", False)
         variant = properties.get("variant", None)
@@ -851,7 +853,6 @@ class ConditionNode(LayerNode):
 
     def execute(self):
         properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
-        resolve_at(properties)
         return [Condition(self.condition, resolve_image(self.displayable), **properties)]
 
 class ConditionGroupNode(LayerNode):
@@ -955,7 +956,6 @@ class AlwaysNode(LayerNode):
 
     def execute(self):
         properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
-        resolve_at(properties)
         return [Always(resolve_image(self.displayable), **properties)]
 
 class LayeredImageNode(python_object):
@@ -1016,7 +1016,6 @@ class LayeredImageNode(python_object):
 
     def execute(self):
         properties = self.final_properties | {k: eval(v) for k, v in self.expr_properties.items()}
-        resolve_at(properties)
 
         l = []
         for i in self.children:
