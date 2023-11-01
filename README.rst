@@ -49,7 +49,7 @@ Motivation and issues with the legacy syntax
 
   However, the non-auto "blue" attribute would be matched with the "eileen_blue" image, not "eileen_token_blue".
 
-  As a result, if an "eileen_token_blue" image is defined, it would only be part of the layeredimage if ``attribute short`` was not written in the group. Toggling between "eileen_blue" and "eileen_token_blue" is very weird.
+  As a result, if an "eileen_token_blue" image is defined, it would only be part of the layeredimage if ``attribute blue`` was not written in the group. Toggling between "eileen_blue" and "eileen_token_blue" is very weird.
 
   - Now, both auto and non-auto attributes follow the same rules in ``multiple`` groups, since these groups don't have a name anymore.
 
@@ -66,9 +66,11 @@ Motivation and issues with the legacy syntax
           group arms auto
           attribute scarf # front part
 
-  You could manually provide the images the scarf attributes use, but I find that tedious and tend to avoid it whenever possible, as it makes the code twice longer and it becomes quickly unreadable. Let's not do that.
+  You could manually provide the images used by the scarf attributes, but I find that tedious and tend to avoid it whenever possible, as it makes the code twice longer and it becomes quickly unreadable. Let's not do that.
 
-  You can't name the back part ``attribute scarf_back``, because then the front part could appear without the back part showing, and vice versa. You could solve that with an ``adjust_attribute`` function, but let's avoid resorting to Python if it can be avoided. But if both attributes are named "scarf", they will both be matched to the same image.
+  You can't name the back part ``attribute scarf_back``, because then the front part could appear without the back part showing, and vice versa. You could solve that with an ``adjust_attribute`` function, but let's avoid resorting to Python if we can.
+
+  And if both attributes are named "scarf", they will both be matched to the same image.
 
   A workaround is to use a single-use ``multiple`` group::
 
@@ -99,19 +101,35 @@ Motivation and issues with the legacy syntax
 
   For example, ``(a or b) and (c or d)`` or ``not (a and b)`` cannot be expressed that way.
 
-  Furthermore, you could give a condition to a group, and see one attribute not respect that condition. That's because when the same ``if_`` property is given to an attribute and to its group, the attribute's property *replaces* the group's rather than merging with it. That was issue #3955 on Ren'Py.
+  Furthermore, you could give a condition to a group, and see one attribute not respect that condition. That's because when the same ``if_`` property is given to an attribute and to its group, the attribute's property *replaces* the group's rather than merging with it. That was `issue #3955 <https://github.com/renpy/renpy/issues/3955>`__ on Ren'Py.
 
-  - Now, the ``if_attr`` property offers a lot more freedom, avoids having to use quotes for the attributes, supports attribute-and-group ifs by using an ``and`` operator to combine them (that's because the ``if_`` property makes things under it appear less often, so when you add another ``if_``, you make it appear even less often), and may even allow including groups in the conditionals (that's not yet implemented).
+  - Now, the ``if_attr`` property offers a lot more freedom, avoids having to use quotes for the attributes, and supports attribute-and-group ifs by using an ``and`` operator to combine them (that's because the ``if_`` property makes things under it appear less often, so when you add another ``if_``, you make it appear even less often).
 
 How to convert to the new syntax
 --------------------------------
 
-Remove quotes from ``variant`` and ``prefix`` clauses. If that doesn't parse, you were doing something bad.
+Rephrase the ``if_`` properties using the new ``if_attr`` : ``if_any ["a", "b"] if_all ["c", "d"] if_not ["e", "f"]`` -> ``if_attr ((a | b) & c & d & !(e | f))``
+
+Remove quotes from ``variant`` and ``prefix`` clauses : ``variant "a"`` -> ``variant a``. If that doesn't parse, you were doing something bad.
 
 Remove the name in ``multiple`` groups : ``group a multiple`` -> ``group multiple``. If the group is also ``auto``:
 
 - For auto multiple groups without a variant, add the former group name as a variant : ``group a auto multiple`` -> ``group multiple auto variant a``
-- For auto multiple groups with a variant, add the former group name to the variant with an underscore : ``group a auto multiple variant "b"`` -> ``group multiple auto variant a_b``
-- For auto multiple groups with attributes declared inside them, write the line just above on its own, and then add another multiple group with no variant (or with the former variant), with the same properties except that it is not auto, and put the attributes inside. Yes, it's complex, but you were doing something weird anyway.
+- For auto multiple groups with a variant, prepend the variant with the former group name with an underscore : ``group a auto multiple variant "b"`` -> ``group multiple auto variant a_b``
+- For auto multiple groups with attributes declared inside them, write the line just above on its own, and then add another multiple group with no variant (or with the former variant), with the same properties except that it is not auto, and put the attributes inside. Yes, it's complex, but you were doing something weird anyway::
 
-Rephrase the ``if_`` properties using the new ``if_attr`` : ``if_any ["a", "b"] if_all ["c", "d"] if_not ["e", "f"]`` -> ``if_attr ((a | b) & c & d & !(e | f))``
+    # before
+    group a auto multiple:
+        attribute att
+    group g auto multiple variant "h":
+        attribute att2
+  ::
+
+    # after
+    group multiple auto variant a
+    group multiple:
+        attribute att
+    group multiple auto variant g_h
+    group multiple variant h:
+        attribute att2
+  Yes, it seems weird and repetitive, but it's reflective of what the code was *actually* doing all along. It's the former behavior that was weird, not mine.
