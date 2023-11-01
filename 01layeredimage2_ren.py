@@ -556,9 +556,9 @@ def parse_property(l, final_properties, expr_properties, names):
 
 def parse_displayable(l):
     """
-    Parses either "image:" opening an ATL block,
-    or a simple expression,
-    or None.
+    Parses either "image:" opening an ATL block and returns a RawBlock,
+    or a simple expression and returns an evalable string,
+    or returns None.
     """
 
     if l.keyword("image"):
