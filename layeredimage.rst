@@ -124,7 +124,9 @@ Always
 The ``always`` statement declares an image that is always shown inside the
 layeredimage, and which will not be attached to an attribute. It
 must be supplied a displayable, and can also take properties. Both can
-be placed on the same line or inside a block.
+be placed on the same line or inside a block. The displayable may be declared
+using the word ``image:`` followed by an ATL block, which is similar to the
+:ref:`atl-image-statement`.
 
 The ``always`` statement takes the following properties:
 
@@ -163,7 +165,8 @@ A more complete example of an ``if`` statement might look like::
     else:
         "augustina_nose_mark"
 
-Each clause must be given a displayable. It can also be given these properties:
+Each clause must be given a displayable, which can be done with the ``image:``
+syntax described earlier. It can also be given these properties:
 
 `if_attr`
     An :ref:`if_attr` expression in parentheses. If this is given, this condition is
@@ -215,10 +218,11 @@ part of ``auto`` groups, more about that later), with all the corresponding
 displayables being shown at the same time (the `if_all`, `if_any`, and `if_not`
 properties can tweak this).
 
-If the displayable is not explicitly given, it will be computed from the name
-of the layeredimage, the group (if any), the group's or the attribute's variant
-(if any), and the attribute. See the :ref:`pattern <layeredimage-pattern>`
-section for more details.
+A displayable can be given, optionally using the ``image:`` syntax described
+earlier. If no displayable is explicitly given, it will be computed from the
+name of the layeredimage, the group (if any), the group's or the attribute's
+variant (if any), and the attribute. See the
+:ref:`pattern <layeredimage-pattern>` section for more details.
 
 The attribute statement takes the following properties:
 
@@ -304,9 +308,9 @@ attribute itself. Two properties are more specific to groups:
     be passed to both the group _and_ to attributes within it.
     If given, this should be a word. If present, it is used as the variant for
     automatically generating image names for attributes with no explicitly
-    passed displayables (see the :ref:`pattern <layeredimage-pattern>`
-    section for more details), and it is used in the pattern used to search for
-    images when automatically defining attributes in ``auto`` groups (see above).
+    passed displayables (see the :ref:`pattern <layeredimage-pattern>` section
+    for more details), and it is used in the pattern used to search for images
+    when automatically defining attributes in ``auto`` groups (see above).
 
 `prefix`
     If given, this is a prefix that is concatenated using an underscore with the
@@ -596,8 +600,9 @@ written code:
         attribute base default
         group face auto
             attribute neutral default
-        attribute supersad:
-            Solid("#00c3", xysize=(100, 100))
+        attribute supersad image:
+            "#00c3"
+            xysize (100, 100)
 
 The ``francis`` layeredimage will declare the (defaulted) ``base`` attribute,
 and associate it the "francis_base" (auto-defined) image using the
