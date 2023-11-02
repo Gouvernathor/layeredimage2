@@ -87,7 +87,7 @@ Motivation and issues with the legacy syntax
   - Now, you can simply write it like this::
 
         layeredimage eileen:
-            attribute scarf variant "back"
+            attribute scarf variant back
             group arms auto
             attribute scarf
 
