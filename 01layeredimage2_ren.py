@@ -390,75 +390,74 @@ class LayeredImage(object):
 
     # same as the original
     def _duplicate(self, args):
+        attributes = set(args.args)
+        unknown = set(args.args)
+        banned = self.get_banned(attributes)
 
-            attributes = set(args.args)
-            unknown = set(args.args)
-            banned = self.get_banned(attributes)
+        for a in self.attributes:
+
+            unknown.discard(a.attribute_name)
+
+            if a.default and (a.attribute_name not in banned):
+                attributes.add(a.attribute_name)
+
+        if self.attribute_function:
+            attributes = set(self.attribute_function(attributes))
+
+            unknown = {i[1:] if i.startswith('-') else i for i in attributes}
 
             for a in self.attributes:
 
                 unknown.discard(a.attribute_name)
 
-                if a.default and (a.attribute_name not in banned):
-                    attributes.add(a.attribute_name)
+                if a.variant:
+                    unknown.discard(a.variant)
 
-            if self.attribute_function:
-                attributes = set(self.attribute_function(attributes))
+        rv = Fixed(**self.fixed_args)
 
-                unknown = set([i[1:] if i.startswith('-') else i for i in attributes])
+        offer_screen = self.offer_screen
+        if offer_screen is None:
+            offer_screen = config.layeredimage_offer_screen
+        if offer_screen:
+            rv._offer_size = (config.screen_width, config.screen_height)
 
-                for a in self.attributes:
+        for i in self.layers:
+            d = i.get_displayable(attributes)
 
-                    unknown.discard(a.attribute_name)
+            if d is not None:
 
-                    if a.variant:
-                        unknown.discard(a.variant)
+                if d._duplicatable:
+                    d = d._duplicate(None)
 
-            rv = Fixed(**self.fixed_args)
+                rv.add(d)
 
-            offer_screen = self.offer_screen
-            if offer_screen is None:
-                offer_screen = config.layeredimage_offer_screen
-            if offer_screen:
-                rv._offer_size = (config.screen_width, config.screen_height)
+        if unknown and args.lint:
+            args = args.copy()
+            args.args = tuple(unknown)
+            args.extraneous()
 
-            for i in self.layers:
-                d = i.get_displayable(attributes)
+        if unknown and config.developer:
 
-                if d is not None:
+            message = [" ".join(args.name), "unknown attributes:", " ".join(sorted(unknown))]
 
-                    if d._duplicatable:
-                        d = d._duplicate(None)
+            text = Text(
+                "\n".join(message),
+                size=16,
+                xalign=0.5,
+                yalign=0.5,
+                textalign=0.5,
+                color="#fff",
+                outlines=[ (1, "#0008", 0, 0) ],
+            )
 
-                    rv.add(d)
+            rv = Fixed(rv, text, fit_first=True)
 
-            if unknown and args.lint:
-                args = args.copy()
-                args.args = tuple(unknown)
-                args.extraneous()
+        rv = At(rv, *self.at)
 
-            if unknown and config.developer:
+        if self.transform_args:
+            rv = Transform(child=rv, **self.transform_args)
 
-                message = [" ".join(args.name), "unknown attributes:", " ".join(sorted(unknown))]
-
-                text = Text(
-                    "\n".join(message),
-                    size=16,
-                    xalign=0.5,
-                    yalign=0.5,
-                    textalign=0.5,
-                    color="#fff",
-                    outlines=[ (1, "#0008", 0, 0) ],
-                )
-
-                rv = Fixed(rv, text, fit_first=True)
-
-            rv = At(rv, *self.at)
-
-            if self.transform_args:
-                rv = Transform(child=rv, **self.transform_args)
-
-            return rv
+        return rv
 
     # same as the original
     def _list_attributes(self, tag, attributes):
