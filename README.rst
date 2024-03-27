@@ -37,7 +37,9 @@ Motivation and issues with the legacy syntax
 
 - Attribute definition in ``multiple`` groups behave differently between the ``auto`` behavior and the auto attribution of displayables to non-auto attributes. Yes, that's a mouthful.
 
-  Auto attributes match an image with the group's name in it, but the attributes written explicitly match an image not including the group's name
+  Basically, there is the group-level ``auto``, and there is attribute-level automatic finding of images when you write an attribute without explicitly giving it a displayable. group-``auto`` takes the defined images and generate attributes from them, when attribute-auto takes the attribute name and finds one matching image. Both make use of the layeredimage name and other informations, and have a common trait of searching for a pattern through renpy's defined images.
+
+  The trouble is, the patterns used by the two features differ in one specific corner case. In a ``multiple`` group, group-``auto``'s search will use the group's name, whereas the attribute-auto search will not.
 
   For example in the following code::
 
@@ -49,11 +51,11 @@ Motivation and issues with the legacy syntax
 
   However, the non-auto "blue" attribute would be matched with the "eileen_blue" image, not "eileen_token_blue".
 
-  As a result, if an "eileen_token_blue" image is defined, it would only be part of the layeredimage if ``attribute blue`` was not written in the group. Toggling between "eileen_blue" and "eileen_token_blue" is very weird.
+  As a result, if an "eileen_token_blue" image is defined, it would only be used by the layeredimage if ``attribute blue`` was not written in the group. Toggling between the "eileen_blue" and "eileen_token_blue" images for the same "eileen blue" attribute is very weird.
 
   - Now, both auto and non-auto attributes follow the same rules in ``multiple`` groups, since these groups don't have a name anymore.
 
-    The former behavior (of auto-defining a bunch of non-mutually-exclusive attributes from images beginning the same way) can now be done using a ``variant``.
+    The former behavior (of auto-defining a bunch of non-mutually-exclusive attributes from images beginning the same way) can now be done using a ``variant``, see below.
 
     The ``auto`` behavior still disregards the format_function passed to the layeredimage, but now at least it works the same way as the default format_function which treats ``multiple`` groups as being nameless.
 
@@ -65,6 +67,8 @@ Motivation and issues with the legacy syntax
           attribute scarf # back part
           group arms auto
           attribute scarf # front part
+
+  These two layers need to be given two different sprites, otherwise the bottom one is pointless.
 
   You could manually provide the images used by the scarf attributes, but I find that tedious and tend to avoid it whenever possible, as it makes the code twice longer and it becomes quickly unreadable. Let's not do that.
 
