@@ -107,7 +107,7 @@ Motivation and issues with the legacy syntax
 
   Furthermore, you could give a condition to a group, and see one attribute not respect that condition. That's because when the same ``if_`` property is given to an attribute and to its group, the attribute's property *replaces* the group's rather than merging with it. That was `issue #3955 <https://github.com/renpy/renpy/issues/3955>`__ on Ren'Py.
 
-  - Now, the ``if_attr`` property offers a lot more freedom, avoids having to use quotes for the attributes, and supports attribute-and-group ifs by using an ``and`` operator to combine them (that's because the ``if_`` property makes things under it appear less often, so when you add another ``if_``, you make it appear even less often).
+  - Now, the ``if_attr`` property offers a lot more freedom, avoids having to use quotes for the attributes, and supports attribute-and-group ifs by using an ``and`` operator to combine the two set of conditions (that's because the ``if_`` property makes things under it appear less often, so when you add another ``if_``, you make it appear even less often).
 
 How to convert to the new syntax
 --------------------------------
